@@ -13,6 +13,7 @@
 #include "preset_store.h"
 #include "preset_io.h"
 #include "preset_fs_stdio.h"
+#include "classic_input.h"
 
 #define SAMPLES_PER_BUFFER_MAX BUFFER_SAMPLES_MAX
 #define SINE_LUT_MASK (SINE_LUT_SIZE - 1)
@@ -31,6 +32,26 @@ static volatile u32 g_phase_step = 0;
 static volatile u32 g_vol_scale = 0;
 // Samples per buffer in use. Changed only by apply_audio_buffer, while the voice is stopped.
 static volatile u32 g_buffer_samples = BUFFER_SAMPLES_DEFAULT;
+
+// Classic Controller buttons are mirrored onto the Wiimote bits. Classic X and Y
+// use the `one` and `two` slots of the classic table.
+static const ClassicButtonMasks k_classic_masks = {
+    WPAD_CLASSIC_BUTTON_UP, WPAD_CLASSIC_BUTTON_DOWN,
+    WPAD_CLASSIC_BUTTON_LEFT, WPAD_CLASSIC_BUTTON_RIGHT,
+    WPAD_CLASSIC_BUTTON_A, WPAD_CLASSIC_BUTTON_B,
+    WPAD_CLASSIC_BUTTON_X, WPAD_CLASSIC_BUTTON_Y,
+    WPAD_CLASSIC_BUTTON_PLUS, WPAD_CLASSIC_BUTTON_MINUS,
+    WPAD_CLASSIC_BUTTON_HOME
+};
+
+static const ClassicButtonMasks k_core_masks = {
+    WPAD_BUTTON_UP, WPAD_BUTTON_DOWN,
+    WPAD_BUTTON_LEFT, WPAD_BUTTON_RIGHT,
+    WPAD_BUTTON_A, WPAD_BUTTON_B,
+    WPAD_BUTTON_1, WPAD_BUTTON_2,
+    WPAD_BUTTON_PLUS, WPAD_BUTTON_MINUS,
+    WPAD_BUTTON_HOME
+};
 
 // BEGIN noise-prng
 // White-noise generator for the audio callback: xorshift32 (Marsaglia 13/17/5).
@@ -261,6 +282,11 @@ int main(int argc, char **argv) {
         u32 held = WPAD_ButtonsHeld(0);
         WPADData *data = WPAD_Data(0);
 
+        // Recomputed every frame: a pad error or a removed Classic strips its buttons.
+        int classic = classic_link_ok(data->err, data->exp.type == WPAD_EXP_CLASSIC);
+        pressed = classic_translate_buttons(pressed, classic, &k_classic_masks, &k_core_masks);
+        held = classic_translate_buttons(held, classic, &k_classic_masks, &k_core_masks);
+
         if (pressed & WPAD_BUTTON_HOME) break;
 
         // --- WELCOME SCREEN LOGIC ---
@@ -400,6 +426,19 @@ int main(int argc, char **argv) {
             if (abs(joy_y) > 10) lfo_offset_hz = (sine_table[lfo_phase] * joy_y) / 60000;
             if (abs(joy_x) > 10) target_vol -= abs((sine_table[lfo_phase] * joy_x) / 60000);
             
+            lfo_phase = (lfo_phase + 170) % SINE_LUT_SIZE;
+        }
+
+        // Classic Controller LFO: left stick Y = vibrato, right stick X = tremolo
+        if (classic) {
+            int ly = classic_stick_norm(data->exp.classic.ljs.pos.y, data->exp.classic.ljs.center.y,
+                                        data->exp.classic.ljs.min.y, data->exp.classic.ljs.max.y);
+            int rx = classic_stick_norm(data->exp.classic.rjs.pos.x, data->exp.classic.rjs.center.x,
+                                        data->exp.classic.rjs.min.x, data->exp.classic.rjs.max.x);
+
+            if (abs(ly) > 10) lfo_offset_hz = (sine_table[lfo_phase] * ly) / 60000;
+            if (abs(rx) > 10) target_vol -= abs((sine_table[lfo_phase] * rx) / 60000);
+
             lfo_phase = (lfo_phase + 170) % SINE_LUT_SIZE;
         }
 
