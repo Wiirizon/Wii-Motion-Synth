@@ -2,6 +2,26 @@
 
 All notable changes to Wii Motion Synth are documented here.
 
+## [1.3.0] - 2026-11-10
+
+### Added
+
+- Classic Controller button mappings and analog sticks for vibrato and
+  tremolo. See [controller documentation](docs/CONTROLLERS.md).
+- Settings for audio buffer size and output volume; both are saved in presets.
+
+### Fixed
+
+- Audio output now starts silent before the welcome screen, resolving the
+  startup beep reported in [issue #11](https://github.com/Wiirizon/Wii-Motion-Synth/issues/11).
+
+### Hardware validation
+
+- The user tested the release build on Wii and reports that the startup beep
+  is gone.
+- Classic Controller hardware was not available for testing; its button and
+  stick mappings remain unverified on console.
+
 ## [1.2.0] - 2026-11-05
 
 ### Added
@@ -14,6 +34,14 @@ All notable changes to Wii Motion Synth are documented here.
 
 - Tremolo volume underflow, invalid sensor-derived pitch conversion, and
   per-sample random-number generation in the audio callback.
+- Synth frequency is clamped to 100-2100 Hz after quantization, octave shift,
+  and Nunchuk LFO. Tilt maps to 100-1000 Hz; octave shift and the LFO can push
+  the output to the 2100 Hz ceiling, and the displayed frequency uses the
+  same clamped value.
+- Non-finite pitch values map to the 100 Hz floor instead of an undefined
+  float-to-integer conversion.
+- White-noise generation uses a bounded xorshift32 generator in the audio
+  callback instead of calling `rand()` per sample.
 
 ### Hardware validation
 
@@ -22,8 +50,6 @@ All notable changes to Wii Motion Synth are documented here.
 - A brief beep before the welcome screen was reported; it stops when the
   welcome screen appears and has not been diagnosed. See
   [issue #11](https://github.com/Wiirizon/Wii-Motion-Synth/issues/11).
-
-## [Unreleased]
 
 ## [1.1.1] - 2026-11-01
 

@@ -8,7 +8,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release history and
 [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
 
 The current application metadata identifies the developer as `Wiirizon` and
-the version as `1.2.0`.
+the version as `1.3.0`.
 
 ## Features
 
@@ -20,6 +20,8 @@ the version as `1.2.0`.
   in-app settings menu; every value is bounded. See [docs/SETTINGS.md](docs/SETTINGS.md).
 - Optional C-major pentatonic quantization.
 - Nunchuk joystick vibrato and tremolo.
+- Classic Controller buttons and sticks; see [controller mappings](docs/CONTROLLERS.md).
+- Adjustable audio buffer size and output volume.
 - GX waveform oscilloscope and a text statistics screen.
 - DMA-safe, 32-byte-aligned buffers and lookup-table-based sine generation.
 
@@ -41,6 +43,7 @@ the version as `1.2.0`.
 | Hold `+`, press `-` | Open or close the settings menu (D-pad to navigate, `A` for Reset/Back) |
 | `-` | Toggle oscilloscope/statistics UI |
 | Nunchuk joystick | Vibrato and tremolo LFO |
+| Classic Controller | Mirrored button controls, left stick Y vibrato, right stick X tremolo |
 | `HOME` | Exit |
 
 When no waveform selector is held, the application uses the sine waveform.
@@ -48,8 +51,8 @@ When no waveform selector is held, the application uses the sine waveform.
 ## Installation on Real Hardware
 
 1. Format an SD card as FAT32.
-2. Download `WiiMotionSynth-v1.2.0.zip` from the
-   [v1.2.0 GitHub release](https://github.com/Wiirizon/Wii-Motion-Synth/releases/tag/v1.2.0).
+2. Download `WiiMotionSynth-v1.3.0.zip` from the
+   [v1.3.0 GitHub release](https://github.com/Wiirizon/Wii-Motion-Synth/releases/tag/v1.3.0).
 3. Extract the archive at the SD-card root. The resulting application directory
    is `apps/WiiMotionSynth/` and contains `boot.dol`, `meta.xml`, and
    `icon.png`.
@@ -98,7 +101,7 @@ mkdir -p apps/WiiMotionSynth
 cp build/WiiMotionSynth.dol apps/WiiMotionSynth/boot.dol
 cp meta.xml apps/WiiMotionSynth/
 cp icon.png apps/WiiMotionSynth/
-zip -r WiiMotionSynth-v1.2.0.zip apps/
+zip -r WiiMotionSynth-v1.3.0.zip apps/
 ```
 
 The GitHub Actions workflow performs these steps automatically when manually
